@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101a32">
+<title>تشفير البشير | Bashir Cipher</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151f36;--line:#2a3855;--accent:#70e1c1;--text:#f3f6ff;--muted:#aab7d0}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#1c3150,var(--bg) 65%);color:var(--text);font-family:Tahoma,Arial,sans-serif;min-height:100vh}
+header{text-align:center;padding:44px 16px 24px}
+.logo{width:68px;height:68px;margin:auto auto 14px;border:1px solid #47617f;border-radius:22px;display:grid;place-items:center;font-size:32px;background:#172944}
+h1{margin:8px 0;font-size:clamp(27px,5vw,42px)}
+header p,.muted{color:var(--muted);line-height:1.8}
+main{width:min(900px,92%);margin:auto}
+.card{background:#121b30ed;border:1px solid var(--line);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 12px 32px #0002}
+h2{font-size:20px;margin-top:0}
+textarea,input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:#0b1223;color:var(--text);font:inherit;line-height:1.9}
+textarea{min-height:120px;resize:vertical}
+.buttons{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+button{font:inherit;font-weight:bold;border:0;border-radius:10px;padding:12px 17px;cursor:pointer;background:var(--accent);color:#10241f}
+button.secondary{background:#24334f;color:var(--text);border:1px solid var(--line)}
+button:hover{filter:brightness(1.1)}
+.result{white-space:pre-wrap;overflow-wrap:anywhere;direction:auto;min-height:55px;background:#0b1223;border:1px solid var(--line);border-radius:12px;padding:14px;line-height:2}
+.note{font-size:13px;color:var(--muted);line-height:1.8}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:center;padding:10px;border-bottom:1px solid var(--line)}
+th{color:var(--accent)}
+.tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+footer{text-align:center;color:var(--muted);padding:30px 12px;font-size:13px}
+.badge{display:inline-block;border:1px solid #36546a;color:var(--accent);border-radius:99px;padding:5px 11px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🔐</div>
+  <div class="badge">الإصدار 1.0</div>
+  <h1>تشفير البشير</h1>
+  <p>Bashir Cipher<br>نظام ترميز عربي من تصميمك</p>
+</header>
+
+<main>
+<section class="card">
+<h2>✦ شفّر رسالتك</h2>
+<textarea id="plain" placeholder="اكتب رسالتك بالعربية..."></textarea>
+<div class="buttons">
+<button onclick="encrypt()">تشفير النص</button>
+<button class="secondary" onclick="clearAll()">مسح</button>
+</div>
+<h2>النص المشفّر</h2>
+<div id="encoded" class="result" aria-live="polite"></div>
+<div class="buttons">
+<button class="secondary" onclick="copyText('encoded')">نسخ التشفير</button>
+</div>
+</section>
+
+<section class="card">
+<h2>✦ فك التشفير</h2>
+<textarea id="cipher" placeholder="ألصق الرموز هنا..."></textarea>
+<div class="buttons">
+<button onclick="decrypt()">فك التشفير</button>
+</div>
+<h2>النص الأصلي</h2>
+<div id="decoded" class="result" aria-live="polite"></div>
+<div class="buttons">
+<button class="secondary" onclick="copyText('decoded')">نسخ النص</button>
+</div>
+<p class="note">افصل الرموز بمسافة، واستخدم / للفصل بين الكلمات.</p>
+</section>
+
+<section class="card">
+<h2>✦ جدول الحروف</h2>
+<input id="search" placeholder="ابحث عن حرف أو رمز..." oninput="renderTable()">
+<div class="tablewrap">
+<table>
+<thead><tr><th>الحرف</th><th>الرمز</th></tr></thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+</section>
+
+<section class="card">
+<h2>عن النظام</h2>
+<p class="muted">يحوّل تشفير البشير الحروف إلى رموز ثابتة تتكوّن من رقم وحرفين. تُستخدم الشرطة داخل الرمز، والمسافة بين الرموز، والشرطة المائلة للفصل بين الكلمات.</p>
+<p class="note">هذا نظام ترميز تعليمي قابل للعكس، وليس وسيلة قوية لحماية الأسرار. لا تستخدمه لحماية كلمات المرور أو البيانات الحساسة.</p>
+</section>
+</main>
+<footer>تشفير البشير · Bashir Cipher · الإصدار 1.0</footer>
+
+<script>
+const pairs = [
+["ا","1-با"],["ب","2-تا"],["ت","3-ثا"],["ث","4-جا"],
+["ج","5-حا"],["ح","6-خا"],["خ","7-دا"],["د","8-ذا"],
+["ذ","9-را"],["ر","0-زا"],["ز","1-سا"],["س","2-شا"],
+["ش","3-صا"],["ص","4-ضا"],["ض","5-طا"],["ط","6-ظا"],
+["ظ","7-عا"],["ع","8-غا"],["غ","9-فا"],["ف","0-قا"],
+["ق","1-كا"],["ك","2-لا"],["ل","3-ما"],["م","4-نا"],
+["ن","5-ها"],["ه","6-وا"],["و","7-يا"],["ي","8-أا"],
+["ء","9-أب"],["ة","0-أت"],["ى","1-أث"],["أ","2-أج"],
+["إ","3-أح"],["آ","4-أخ"]
+];
+const encodeMap = new Map(pairs);
+const decodeMap = new Map(pairs.map(([letter,code])=>[code,letter]));
+
+function encrypt(){
+ const text=document.getElementById("plain").value.normalize("NFC");
+ const out=[];
+ for(const ch of text){
+   if(ch===" "){out.push("/");continue;}
+   if(encodeMap.has(ch)){out.push(encodeMap.get(ch));continue;}
+   if(ch==="\n"){out.push("[سطر]");continue;}
+   out.push("[حرف:"+ch.codePointAt(0).toString(16)+"]");
+ }
+ document.getElementById("encoded").textContent=out.join(" ");
+}
+function decrypt(){
+ const tokens=document.getElementById("cipher").value.trim().split(/\s+/);
+ const out=[];
+ for(const token of tokens){
+   if(!token)continue;
+   if(token==="/"){out.push(" ");continue;}
+   if(token==="[سطر]"){out.push("\n");continue;}
+   if(decodeMap.has(token)){out.push(decodeMap.get(token));continue;}
+   const m=token.match(/^\[حرف:([0-9a-f]+)\]$/i);
+   if(m){
+     const cp=parseInt(m[1],16);
+     if(Number.isFinite(cp)&&cp<=0x10ffff)out.push(String.fromCodePoint(cp));
+     else out.push("�");
+   }else out.push("�");
+ }
+ document.getElementById("decoded").textContent=out.join("");
+}
+function clearAll(){
+ ["plain","encoded","cipher","decoded"].forEach(id=>document.getElementById(id).value!==undefined?document.getElementById(id).value="":document.getElementById(id).textContent="");
+}
+async function copyText(id){
+ const text=document.getElementById(id).textContent;
+ try{await navigator.clipboard.writeText(text);alert("تم النسخ!");}
+ catch(e){alert("تعذّر النسخ التلقائي. حدّد النص وانسخه يدويًا.");}
+}
+function renderTable(){
+ const q=document.getElementById("search").value.trim();
+ const body=document.getElementById("tableBody");
+ body.replaceChildren();
+ pairs.filter(([letter,code])=>!q||letter.includes(q)||code.includes(q))
+ .forEach(([letter,code])=>{
+   const tr=document.createElement("tr");
+   const td1=document.createElement("td"),td2=document.createElement("td");
+   td1.textContent=letter;td2.textContent=code;
+   tr.append(td1,td2);body.append(tr);
+ });
+}
+renderTable();
+</script>
+</body>
+</html>
